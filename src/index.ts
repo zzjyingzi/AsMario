@@ -221,7 +221,7 @@ class app{
         const newRole = new Role();
         newRole.create(ctx,{
             x: 0,
-            y: horizon - 50,
+            y: 0,
             horizon: horizon,
             map: map,
             v: 5,
