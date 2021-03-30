@@ -116,46 +116,45 @@ class app{
     };
     // 移动map函数独立出来
     moveMap(newRole:any, app:any){
-        const { space, right, left } = newRole.button;
+        const { button, stV, positionX, preFm } = newRole;
+        const { mapVelocity, map, width, mapPosition } = app;
+        const { space, right, left } = button;
         // 当前运行速度,注意跳跃进度会影响
-        const lastMiddle = app.map[app.map.length - 1][0] - app.width/2;
+        const lastMiddle = map[map.length - 1][0] - width/2;
 
         // 按键规则对map速度的影响
-        app.mapVelocity = right ? newRole.stV :(left ? -newRole.stV : 0);
+        app.mapVelocity = right ? stV :(left ? -stV : 0);
 
-        // if(newRole.mapVelocity === 0){
-        //     app.mapVelocity = 0;
-        // }
 
-        newRole.mapVelocity = app.mapVelocity; // 传递参数到role
+        newRole.mapVelocity = mapVelocity; // 传递参数到role
         // x 方移动Y轴，map渲染位置改变,
         // 已有正向，反向？？？   |---|-------------|---|
         // 左端---前端半屏界限----中间段----后端半屏---右端
-        if(newRole.positionX < app.width/2){ // 前端区间
+        if(positionX < width/2){ // 前端区间
             app.mapVelocity = 0;
-            if(app.mapPosition[0] > app.width/2){ //在后半段递减
-                app.mapPosition[0] = app.mapPosition[0] + app.mapVelocity;
+            if(mapPosition[0] > width/2){ //在后半段递减
+                app.mapPosition[0] = mapPosition[0] + mapVelocity;
             } else{
-                app.mapPosition[0] = app.width/2;
+                app.mapPosition[0] = width/2;
             }
-        } else if(newRole.positionX === app.width/2){ // 注意,如果不等无法启动地图移动动画,隐含条件是只有role中的newX在中间段停止后,此处动画才会启动
+        } else if(positionX === width/2){ // 注意,如果不等无法启动地图移动动画,隐含条件是只有role中的newX在中间段停止后,此处动画才会启动
 
             // console.log(newRole.preFm, 'qwe');
-            if(newRole.preFm){ // 跳跃运行中，此处以后可能会有问题，重复space键时无法停止进程，垂直跳跃没有清理最后的速度
-                app.mapVelocity = right ? newRole.stV :(left ? -newRole.stV : 0);
+            if(preFm){ // 跳跃运行中，此处以后可能会有问题，重复space键时无法停止进程，垂直跳跃没有清理最后的速度
+                app.mapVelocity = right ? stV :(left ? -stV : 0);
             }
 
-            app.mapPosition[0] = app.mapPosition[0] + app.mapVelocity;
-        } else if(app.mapPosition[0] > app.width/2 && app.mapPosition[0] < lastMiddle){ // 中间段
-            app.mapPosition[0] = app.mapPosition[0] + app.mapVelocity;  // map最大尺寸
-        } else if(app.mapPosition[0] === lastMiddle){ // 此处突然加速???原因:map和role叠加速度，叠加速度是因为区间判断不准确
+            app.mapPosition[0] = mapPosition[0] + mapVelocity;
+        } else if(mapPosition[0] > width/2 && mapPosition[0] < lastMiddle){ // 中间段
+            app.mapPosition[0] = mapPosition[0] + mapVelocity;  // map最大尺寸
+        } else if(mapPosition[0] === lastMiddle){ // 此处突然加速???原因:map和role叠加速度，叠加速度是因为区间判断不准确
             app.mapPosition[0] = lastMiddle;
-            newRole.velocity[0] = app.mapVelocity;
-        } else if(newRole.positionX > lastMiddle){  // 尾部区间
+            newRole.velocity[0] = mapVelocity;
+        } else if(positionX > lastMiddle){  // 尾部区间
             app.mapVelocity = 0;
-            app.mapPosition[0] = lastMiddle + app.mapVelocity;
+            app.mapPosition[0] = lastMiddle + mapVelocity;
         }
-        newRole.mapPosition[0] = app.mapPosition[0]; // 存储变革数据到role中
+        newRole.mapPosition[0] = mapPosition[0]; // 存储变革数据到role中
     };
 
     // map在屏幕的渲染范围
@@ -226,7 +225,8 @@ class app{
             map: map,
             v: 5,
             roleWidth: 40,
-            roleHeight: 50
+            roleHeight: 50,
+            tempHorizon: 0
         }); // 起始点
         app.newRole = newRole;
         newRole.screenWidth = app.width;
@@ -258,8 +258,8 @@ class app{
 
 const newGame =  new app();
 // newGame.map = [[0, 0],[300, 0], [350, 0],[350, 0],[400, 0],[400, 0],[1200, 0],[1200, 0],[1250, 0],[1250, 0], [1600, 0],[1750, 0], [1750, 0],[1800, 0], [1800, 0]];
- newGame.map = [[0, 0],[300, 0],
-     [500, 0],[500, 60],[700, 60],[700, 0],
+ newGame.map = [[0, 0],
+     [400, 0],[400, 60],[600, 60],[600, 0],
      [1200, 0],[1200, 120],[1250, 120],[1250, 0],
      [1750, 0], [1750, 50],[1800, 50], [1800, 0],
      [2500, 0], [2500, 100], [2550, 100], [2550, 0],

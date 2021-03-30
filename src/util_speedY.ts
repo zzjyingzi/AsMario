@@ -4,11 +4,11 @@
  // 跳跃也要有“实体”，如果当前x轴不存在实体则向下一层x轴搜索
  // 应当判断slowDown(newRole.preFm)内容是否等于0
 export function slowDown(t:number){
-    if(t <= 24){                        // 匀加速
+    if(t <= 24){                        // 匀减速
         return  Math.round(10*t-5*t*t/24)
     } else if (t <= 48){
-        const t1 = 48 - t;              // 匀减速
-        return  Math.floor(5*t1*t1/24)
+        const t1 = 48 - t + 1;              // 匀加速
+        return  Math.round(10*t1-5*t1*t1/24) // Math.floor(5*t1*t1/24)
     } else if (t > 48){                 // 超过48帧后变为匀速
         const t2 = t - 48;
         return  -Math.round(10*t2)  // 10*t2+5*t2*t2/24
