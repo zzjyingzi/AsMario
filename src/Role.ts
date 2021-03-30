@@ -87,9 +87,10 @@ export default class Role{
 //--------------------------------------------------------------水平左右移动逻辑
         // 障碍物临界内容
         if(!balance){ //
+            console.log(level, positionBottomY, 222);
             if(level > positionBottomY){ // 撞墙
+                console.log(newX, 998);
                 V[0] = 0;
-                // console.log();
             } else if(level < positionBottomY){ // 平抛，run的跳跃需要关闭
                 if(velocity[0]){ // 无法屏蔽移动超过平台边界时的跳跃，
                     newRole.preFm = 25; // 这条语句会开启跳跃动作
@@ -98,6 +99,7 @@ export default class Role{
                 }
             }
         } else { // level === positionBottomY 时role水平方向运动
+
         }
 
 
@@ -110,7 +112,6 @@ export default class Role{
         } else if(newX + newRole.mapPosition[0] - newRole.screenWidth/2 >= newRole.map[newRole.map.length - 1][0] - width && velocity[0] >= 0){
             // 右侧撞墙
             newX = newRole.screenWidth - width;
-            // console.log();
         } else if ( pos[0] >= mapMoveLimitRage &&  (newX + newRole.mapPosition[0] - newRole.screenWidth/2 <= lastMiddle)){
             // role相对于map的当前坐标：如果小于半屏则为newX，大于则为newRole.mapPosition[0]
             newX = mapMoveLimitRage;
@@ -136,23 +137,36 @@ export default class Role{
             if(pos[0] + width === pointA[0]){ // role右侧点与map点重合，map点呈现高度上升趋势
                 if(pointA[1] > pointB[1]){
                     if(roleBottom === pointA[1]){ // 与顶边重合
+
                         return [pos[0], pointA[1]];
                     } else if(roleBottom === pointB[1] || (roleBottom < pointA[1] && roleBottom > pointB[1])){ // 错误进入了平台内部
                         return [pos[0] + width, pointB[1]]; // 修正占据建筑内部的错误
                     } else if(roleBottom > pointA[1]){
+
                         // 此处要有初始跳跃点比较
                         return [pos[0], pointA[1]];
                     }
                 } else if(pointA[1] < pointB[1]){
                     if(roleBottom === pointA[1]){ // 与底边重合
-                        return velocity > 0 ? [pos[0], pointB[1]] : [pos[0], pointA[1]];
+                        console.log('xxxxx');
+                        // 此处要有初始跳跃点比较
+                        if(velocity > 0){
+                            return  [pos[0], pointB[1]];
+                        } else if(velocity < 0){
+                            return  [pos[0], pointA[1]];
+                        } else {
+                            return  [pos[0], pointA[1]];
+                        }
                     } else if(roleBottom === pointB[1]){ // 与台阶左侧点重合
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointB[1]];
+                        console.log(11111);
+                        return [pos[0], pointA[1]];
                     } else if(roleBottom > pointB[1]){
+                        console.log(22222);
                         // 此处要有初始跳跃点比较
                         return [pos[0], pointB[1]];
                     } else if(roleBottom > pointA[1] && roleBottom < pointB[1]){// 原地跳起 / 撞墙, 此时如果有v则会出错，需要另行判断
+                        console.log(33333);
                         return [pos[0], pointB[1]];
                     }
                 } else { // pointA[1] === pointB[1] 在凹陷的平台上
@@ -259,23 +273,20 @@ export default class Role{
 
                 }
                 newY = tempHorizon + increment;
-                console.log(preFm, increment);
             } else if (tempHorizon < mappingPointY) { // 跳上高台
                 newY = tempHorizon + increment;
             } else {// 起跳空中状态
                 if (rolePositionBottomY > mappingPointY) { // 起跳
-                    console.log('111');
                     newY = mappingPointY + increment;
                 } else if (rolePositionBottomY < mappingPointY) {
                     console.log('角色小于映射点的错误');
                     newY = mappingPointY;
                     newRole.preFm = 0;
                 } else {
-                    console.log('333');
-                    // console.log(increment, preFm,'increment, preFm, else');
                     newY = mappingPointY + increment;
                 }
-            }
+            }.0
+
             // console.log(newY, 'tempHorizon, mappingPointY, rolePositionBottomY, increment');
         //    跳起平台转换，结束--------------------
 
@@ -292,10 +303,7 @@ export default class Role{
                 newY = mappingPointY;
                 newRole.preFm = 0;
             }
-
-
         }
-        console.log(increment, preFm);
 
 //---------------------
 
