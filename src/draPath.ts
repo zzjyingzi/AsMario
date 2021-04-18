@@ -1,5 +1,5 @@
 // config 包含绘制样式和图像
-
+// 需要根据screen渲染范围切割
 export default function draPath (ctx:any, path:Array<Array<number>>, config: any, horizon: number, bottom: number, counter?:number){
     const n = counter === undefined ? 0: counter;
     if(n === 0){

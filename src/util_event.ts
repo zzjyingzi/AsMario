@@ -17,6 +17,7 @@ export function bindEvent(target:eventTarget){
         // 而keyUp会使得on/off缓存了一个状态而在loading结束后有执行下一步的指令。
         // 同时keydown重复按下会无效
         if(e.code === "Space"){
+            console.log(target.role.button.space,  keyStatus.loading);
             if(target.role.button.space === keyStatus.loading)return;
             target.role.button.space = keyStatus.on;
         }else if(e.code === 'ArrowRight'|| e.code === 'KeyE'){
@@ -33,7 +34,7 @@ export function bindEvent(target:eventTarget){
         // 会记录关闭状态，不会影响到keyStatus.loading，keyStatus.loading仅使用程序关闭
         // frame时会同时判断loading、on、off
         if(e.code === "Space"){
-            // if(target.role.button.space === keyStatus.loading)return;
+            if(target.role.button.space === keyStatus.loading)return;
             target.role.button.space = keyStatus.off;
         }else if(e.code === 'ArrowRight'|| e.code === 'KeyE'){
             target.role.button.right = keyStatus.off;

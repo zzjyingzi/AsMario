@@ -87,10 +87,11 @@ export default class Role{
 //--------------------------------------------------------------水平左右移动逻辑
         // 障碍物临界内容
         if(!balance){ //
-            console.log(level, positionBottomY, 222);
+            // console.log(level, positionBottomY, 222);
             if(level > positionBottomY){ // 撞墙
-                console.log(newX, 998);
+                // console.log(newX, 999);
                 V[0] = 0;
+                // newX = newX;
             } else if(level < positionBottomY){ // 平抛，run的跳跃需要关闭
                 if(velocity[0]){ // 无法屏蔽移动超过平台边界时的跳跃，
                     newRole.preFm = 25; // 这条语句会开启跳跃动作
@@ -99,7 +100,19 @@ export default class Role{
                 }
             }
         } else { // level === positionBottomY 时role水平方向运动
-
+            // console.log(newX, 998);
+            if(newX <= 0 && newRole.velocity[0] < 0){ // 左侧撞墙
+                newX = 0;
+            } else if(newX + newRole.mapPosition[0] - newRole.screenWidth/2 >= newRole.map[newRole.map.length - 1][0] - width && velocity[0] >= 0){
+                // 右侧撞墙
+                newX = newRole.screenWidth - width;
+            } else if ( pos[0] >= mapMoveLimitRage &&  (newX + newRole.mapPosition[0] - newRole.screenWidth/2 <= lastMiddle)){
+                // role相对于map的当前坐标：如果小于半屏则为newX，大于则为newRole.mapPosition[0]
+                newX = mapMoveLimitRage;
+                newRole.velocity[0] = 0;
+            } else{
+                newX = newRole.positionX + V[0];
+            }
         }
 
 
@@ -107,18 +120,7 @@ export default class Role{
         // |---|-------------|---|
         // 左端---前端半屏界限----中间段----后端半屏---右端
         // 中间段时停止role动作，此时会开启map动作
-        if(newX <= 0 && newRole.velocity[0] < 0){ // 左侧撞墙
-            newX = 0;
-        } else if(newX + newRole.mapPosition[0] - newRole.screenWidth/2 >= newRole.map[newRole.map.length - 1][0] - width && velocity[0] >= 0){
-            // 右侧撞墙
-            newX = newRole.screenWidth - width;
-        } else if ( pos[0] >= mapMoveLimitRage &&  (newX + newRole.mapPosition[0] - newRole.screenWidth/2 <= lastMiddle)){
-            // role相对于map的当前坐标：如果小于半屏则为newX，大于则为newRole.mapPosition[0]
-            newX = mapMoveLimitRage;
-            newRole.velocity[0] = 0;
-        } else{
-            newX = newRole.positionX + V[0];
-        }
+
 //--------------------------------------------------------------
 
         // 绘制
@@ -148,9 +150,9 @@ export default class Role{
                     }
                 } else if(pointA[1] < pointB[1]){
                     if(roleBottom === pointA[1]){ // 与底边重合
-                        console.log('xxxxx');
                         // 此处要有初始跳跃点比较
                         if(velocity > 0){
+                            console.log('xxxxx');
                             return  [pos[0], pointB[1]];
                         } else if(velocity < 0){
                             return  [pos[0], pointA[1]];
@@ -159,7 +161,6 @@ export default class Role{
                         }
                     } else if(roleBottom === pointB[1]){ // 与台阶左侧点重合
                         // 此处要有初始跳跃点比较
-                        console.log(11111);
                         return [pos[0], pointA[1]];
                     } else if(roleBottom > pointB[1]){
                         console.log(22222);
@@ -249,12 +250,12 @@ export default class Role{
                 newRole.button.space = keyStatus.loading;
                 newY = mappingPointY + increment; //
 
-
             } else {// 动画结束 if(newRole.button.space === keyStatus.loading)
                 // 动画结束，重置当前Y向位置为映射位置
                 // newY = level < positionBottomY + increment ? level: positionBottomY + increment - height;
                 newRole.preFm = 0;// 重置跳跃动画帧
-                newRole.mapVelocity = 0; // 清理map的v速度
+                newRole.mapVelocity = 0; // 清理map的v速度，不正确？
+
                 newRole.button.space = keyStatus.off;// 关闭跳跃loading状态
                 newRole.tempHorizon = mappingPointY; // 动画开始 动画结束，重新记录位置
             }
@@ -285,7 +286,7 @@ export default class Role{
                 } else {
                     newY = mappingPointY + increment;
                 }
-            }.0
+            }
 
             // console.log(newY, 'tempHorizon, mappingPointY, rolePositionBottomY, increment');
         //    跳起平台转换，结束--------------------
@@ -371,17 +372,28 @@ export default class Role{
                         return [pos[0], pointA[1]];
                     }
                 } else if(pointA[1] < pointB[1]){
-                    if(roleBottom === pointA[1]){ // 与底边重合
-                        return velocity > 0 ? [pos[0], pointB[1]] : [pos[0], pointA[1]];
-                    } else if(roleBottom === pointB[1]){ // 与台阶左侧点重合
-                        // 此处要有初始跳跃点比较
-                        return [pos[0], pointB[1]];
-                    } else if(roleBottom > pointB[1]){
-                        // 此处要有初始跳跃点比较
-                        return [pos[0], pointB[1]];
-                    } else if(roleBottom > pointA[1] && roleBottom < pointB[1]){// 原地跳起 / 撞墙, 此时如果有v则会出错，需要另行判断
-                        return [pos[0], pointB[1]];
+
+                    if(velocity > 0){
+                        if(roleBottom >= pointA[1]){
+                            return  [pos[0], pointB[1]];
+                        }
+                    } else if(velocity < 0){
+                        return  [pos[0], pointA[1]];
+                    } else {
+                        return  [pos[0], pointA[1]];
                     }
+
+                    // if(roleBottom === pointA[1]){ // 与底边重合
+                    //     return velocity > 0 ? [pos[0], pointB[1]] : [pos[0], pointA[1]];
+                    // } else if(roleBottom === pointB[1]){ // 与台阶左侧点重合
+                    //     // 此处要有初始跳跃点比较
+                    //     return [pos[0], pointB[1]];
+                    // } else if(roleBottom > pointB[1]){
+                    //     // 此处要有初始跳跃点比较
+                    //     return [pos[0], pointB[1]];
+                    // } else if(roleBottom > pointA[1] && roleBottom < pointB[1]){// 原地跳起 / 撞墙, 此时如果有v则会出错，需要另行判断
+                    //     return [pos[0], pointB[1]];
+                    // }
                 } else { // pointA[1] === pointB[1] 在凹陷的平台上
                     return [pos[0], pointA[1]];
                 }
