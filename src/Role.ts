@@ -87,10 +87,10 @@ export default class Role{
 //--------------------------------------------------------------水平左右移动逻辑
         // 障碍物临界内容
         if(!balance){ //
-            // console.log(level, positionBottomY, 222);
             if(level > positionBottomY){ // 撞墙
-                // console.log(newX, 999);
-                V[0] = 0;
+                if(point[2] > 0){ // [number, number, number(0平台/1凸起/-1凹陷)]
+                    V[0] = 0;
+                }
                 // newX = newX;
             } else if(level < positionBottomY){ // 平抛，run的跳跃需要关闭
                 if(velocity[0]){ // 无法屏蔽移动超过平台边界时的跳跃，
@@ -100,7 +100,6 @@ export default class Role{
                 }
             }
         } else { // level === positionBottomY 时role水平方向运动
-            // console.log(newX, 998);
             if(newX <= 0 && newRole.velocity[0] < 0){ // 左侧撞墙
                 newX = 0;
             } else if(newX + newRole.mapPosition[0] - newRole.screenWidth/2 >= newRole.map[newRole.map.length - 1][0] - width && velocity[0] >= 0){
@@ -110,11 +109,9 @@ export default class Role{
                 // role相对于map的当前坐标：如果小于半屏则为newX，大于则为newRole.mapPosition[0]
                 newX = mapMoveLimitRage;
                 newRole.velocity[0] = 0;
-            } else{
-                newX = newRole.positionX + V[0];
             }
         }
-
+        newX = newX + V[0];
 
         // map临界内容
         // |---|-------------|---|
@@ -130,82 +127,82 @@ export default class Role{
     // run模式查找role在map下的投影，会根据role宽度和所在位置智能寻找支撑点
     findPresentMapPointRun(pos: number[], newRole: any){
         const { map, width, height, velocity, tempHorizon } = newRole;
-        let point: [number, number] = [pos[0], 0];
+        let point: [number, number, number] = [pos[0], 0, 0]; // [number, number, number(0平台/1凸起/-1凹陷)]
         let roleBottom = pos[1]; // 角色底部,由于map中是以horizon为基准计算的
         let jumpStartHorizon = tempHorizon; // 起跳点记录
         for(let i = 0; i < map.length - 2; i++){
             let pointA: [number, number] = map[i],
                 pointB: [number, number] = map[i + 1];
-            if(pos[0] + width === pointA[0]){ // role右侧点与map点重合，map点呈现高度上升趋势
+            if(pos[0] + width === pointA[0]){ // role右侧点与map点重合:台阶左下角底边点/跳跃（平抛）时台子左上角点/台子右上角点（错误处理台子右下角点）
                 if(pointA[1] > pointB[1]){
                     if(roleBottom === pointA[1]){ // 与顶边重合
-
-                        return [pos[0], pointA[1]];
+                        return [pos[0], pointA[1], -1];
                     } else if(roleBottom === pointB[1] || (roleBottom < pointA[1] && roleBottom > pointB[1])){ // 错误进入了平台内部
-                        return [pos[0] + width, pointB[1]]; // 修正占据建筑内部的错误
+                        return [pos[0] + width, pointB[1], 0]; // 修正占据建筑内部的错误
                     } else if(roleBottom > pointA[1]){
-
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointA[1]];
+                        return [pos[0], pointA[1], 0];
                     }
                 } else if(pointA[1] < pointB[1]){
                     if(roleBottom === pointA[1]){ // 与底边重合
                         // 此处要有初始跳跃点比较
-                        if(velocity > 0){
-                            console.log('xxxxx');
-                            return  [pos[0], pointB[1]];
+                        if(velocity[0] > 0){
+                            return  [pos[0], pointB[1], 1]; // 台阶
                         } else if(velocity < 0){
-                            return  [pos[0], pointA[1]];
+                            return  [pos[0], pointA[1], 0]; //
                         } else {
-                            return  [pos[0], pointA[1]];
+                            return  [pos[0], pointB[1], -1];
                         }
                     } else if(roleBottom === pointB[1]){ // 与台阶左侧点重合
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointA[1]];
+                        return [pos[0], pointA[1], 0];
                     } else if(roleBottom > pointB[1]){
-                        console.log(22222);
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointB[1]];
+                        return [pos[0], pointB[1], 0];
                     } else if(roleBottom > pointA[1] && roleBottom < pointB[1]){// 原地跳起 / 撞墙, 此时如果有v则会出错，需要另行判断
-                        console.log(33333);
-                        return [pos[0], pointB[1]];
+                        return [pos[0], pointB[1], 0];
                     }
                 } else { // pointA[1] === pointB[1] 在凹陷的平台上
-                    return [pos[0], pointA[1]];
+                    return [pos[0], pointA[1], 0];
                 }
-            }
-            if(pos[0] === pointA[0]){  // role左侧点与map点重合，map点呈现高度下降趋势，跳上右侧台/从高台右上角跳下  动作
+            } else if(pos[0] === pointA[0]){  // role左侧点与map点重合，map点呈现高度下降趋势，跳上右侧台/从高台右上角跳下  动作
                 if(pointA[1] < pointB[1]){
                     if(roleBottom === pointB[1]){ // 与顶边重合
-                        return [pos[0], pointB[1]];
+                        return [pos[0], pointB[1], 0];
                     } else if(roleBottom === pointA[1] || (roleBottom < pointB[1] && roleBottom > pointA[1])){ // 错误进入了平台内部
-                        return [pos[0] + width, pointA[1]]; // 修正占据建筑内部的错误
+                        return [pos[0] + width, pointA[1], 0]; // 修正占据建筑内部的错误
                     } else if(roleBottom > pointB[1]){
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointB[1]];
+                        return [pos[0], pointB[1], 0];
                     }
                 } else if(pointA[1] > pointB[1]){
-                    if(roleBottom === pointA[1]){ // 与底边重合
-                        return velocity > 0 ? [pos[0], pointB[1]] : [pos[0], pointA[1]];
+                    if(roleBottom === pointB[1]){ // 与底边重合
+                        if(velocity[0] < 0){
+                            return [pos[0], pointA[1], 1];
+                        } else if(velocity[0] > 0){
+                            return [pos[0], pointB[1], 0];
+                        } else {
+                            return [pos[0], pointB[1], 0];
+                        }
                     } else if(roleBottom === pointA[1]){ // 与台阶左侧点重合
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointA[1]];
+                        return [pos[0], pointA[1], 0];
                     } else if(roleBottom > pointA[1]){
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointA[1]];
+                        return [pos[0], pointA[1], 0];
                     } else if(roleBottom > pointB[1] && roleBottom < pointA[1]){// 原地跳起 / 撞墙, 此时如果有v则会出错，需要另行判断
-                        return [pos[0], pointA[1]];
+                        return [pos[0], pointA[1], 0];
                     }
                 } else { // pointA[1] === pointB[1] 在凹陷的平台上
-                    return [pos[0], pointA[1]];
+                    return [pos[0], pointA[1], 0];
                 }
                 // return [pos[0], pointB[1]];
             }
 
             if(pos[0] > pointA[0] && pos[0] + width < pointB[0]){ // role整体在平台上
-                return  [pos[0], pointA[1]];
+                return  [pos[0], pointA[1], 0];
             } else if(pos[0] < pointA[0] && pos[0] + width > pointA[0] && pointA[0] === pointB[0]){ // map上必有上与下两个x相同的点在中间
-                return  pointA[1] > pointB[1] ? [pos[0], pointA[1]] : [pos[0], pointB[1]];
+                return  pointA[1] > pointB[1] ? [pos[0], pointA[1], 0] : [pos[0], pointB[1], 0];
             }
         }
         return point
@@ -218,6 +215,8 @@ export default class Role{
         // 基础计算内容
         let newX = positionX; // 为速度v，需有正反向v和距离边界关系的处理
         let newY = positionY;
+
+        const V = [...velocity];
 
         let increment = slowDown(newRole.preFm); // 跳跃瞬时增量
 
@@ -242,6 +241,10 @@ export default class Role{
         // 未作部分：如果大于mapMoveLimitRage(screenWidth/2)则v为0，此时转化为纵向jump，然后x向map继续移动，目前状态jump时map不动
         if(balance){ // 该结果在结束时可能不会出现，需要近似运算
             // 平路跳跃,需要区分开始和结束
+            if(point[2] > 0){ // [number, number, number(0平台/1凸起/-1凹陷)]
+                V[0] = 0;
+            }
+
             if(newRole.preFm === 1){                          // 动画开始
                 newRole.tempHorizon = newRole.positionY;  // 记录当前水平位置
 
@@ -260,49 +263,44 @@ export default class Role{
                 newRole.tempHorizon = mappingPointY; // 动画开始 动画结束，重新记录位置
             }
         } else if(rolePositionBottomY > mappingPointY){ // 跳起，未着地，未撞墙，由于墙由上下两个点绘制，level为role左侧，垂直映射到map上的点
+
+            newRole.preFm = newRole.preFm + 1;
+
             if(rolePositionBottomY + 10 <= mappingPointY && preFm > 24){
                 newY = mappingPointY;
                 newRole.preFm = 0;
-            } else {
-                newRole.preFm = newRole.preFm + 1;
             }
-
 
         //    跳起平台转换，开始----------------
             if (tempHorizon > mappingPointY) { // 当起跳点大于映射点，（起跳点一定大于等于映射点）
-                if (rolePositionBottomY > tempHorizon) { // role底部点在临界点，方向为正时台子左上方临界点，方向为负时台子右上方临界点
-
-                }
                 newY = tempHorizon + increment;
             } else if (tempHorizon < mappingPointY) { // 跳上高台
                 newY = tempHorizon + increment;
             } else {// 起跳空中状态
-                if (rolePositionBottomY > mappingPointY) { // 起跳
-                    newY = mappingPointY + increment;
-                } else if (rolePositionBottomY < mappingPointY) {
-                    console.log('角色小于映射点的错误');
-                    newY = mappingPointY;
-                    newRole.preFm = 0;
-                } else {
-                    newY = mappingPointY + increment;
-                }
+                newY = mappingPointY + (increment < 0 ? 0 :increment); // 落点必定大于等于投影点
             }
 
-            // console.log(newY, 'tempHorizon, mappingPointY, rolePositionBottomY, increment');
         //    跳起平台转换，结束--------------------
 
 
         } else if(rolePositionBottomY < mappingPointY){// 撞墙，由于墙由上下两个点绘制，level为role左侧，垂直映射到map上的点
+            V[0] = 0;
+            newRole.preFm = newRole.preFm + 1;
 
-            if(tempHorizon > mappingPointY){
+            // 此处 跳上 / 跳下 高台合适
+            if(tempHorizon > mappingPointY){ // 从高处跳下，起跳点大于映射点
                 //撞墙部分，撞墙如何达到底部？？？
-                newRole.preFm = newRole.preFm + 1;
-                newRole.velocity[0] = 0;
                 newY = mappingPointY + increment;
             } else {
-                // 到达底部
-                newY = mappingPointY;
-                newRole.preFm = 0;
+                // 垂直跳跃在边界处理
+                if(point[2] > 0){ // 到达底部
+                    newY = mappingPointY;
+                    newRole.preFm = 0;
+                } else if(point[2] < 0){ // 凹台，向下趋势
+                    newY = tempHorizon + (increment >= 0 ? increment : 0);
+                } else { // 平台
+                    newY = tempHorizon + (increment >= 0 ? increment : 0);
+                }
             }
         }
 
@@ -340,8 +338,10 @@ export default class Role{
             newX = mapMoveLimitRage;
             newRole.velocity[0] = 0;
         } else {
-            newX = positionX + velocity[0];
+            newX = positionX + V[0];
         }
+
+
 //--------------------- map渲染结束
 
 
@@ -355,50 +355,69 @@ export default class Role{
     // 判断x与x+width在map上的映射，如果两个映射坐标Y值不同（如果有x等值的点），则中间必定有点，如果中间没有点则role在台阶上，如果中间有点则role的一部分在台阶上，取y值高的点。
     findPresentMapPoint(pos: number[], newRole: any){
         const { map, width, height, velocity } = newRole;
-        let point: [number, number] = [pos[0], 0];
+        let point: [number, number, number] = [pos[0], 0, 0];
         let roleBottom = pos[1]; // 角色底部,由于map中是以horizon为基准计算的
         for(let i = 0; i < map.length - 2; i++){
             let pointA: [number, number] = map[i],
                 pointB: [number, number] = map[i + 1];
 
+            if(pos[0] > pointA[0] && pos[0] + width < pointB[0]){ // role整体在平台上
+                return  [pos[0], pointA[1], 1];
+            } else if(pos[0] < pointA[0] && pos[0] + width > pointA[0] && pointA[0] === pointB[0]){ // map上必有上与下两个x相同的点在中间
+                return  pointA[1] > pointB[1] ? [pos[0], pointA[1], 1] : [pos[0], pointB[1], 1];
+            }
+
             if(pos[0] + width === pointA[0]){ // role右侧点与map点重合，map点呈现高度上升趋势
                 if(pointA[1] > pointB[1]){
                     if(roleBottom === pointA[1]){ // 与顶边重合
-                        return [pos[0], pointA[1]];
+                        return [pos[0], pointA[1], 0];
                     } else if(roleBottom === pointB[1] || (roleBottom < pointA[1] && roleBottom > pointB[1])){ // 错误进入了平台内部
-                        return [pos[0] + width, pointB[1]]; // 修正占据建筑内部的错误
+                        return [pos[0] + width, pointB[1], 0]; // 修正占据建筑内部的错误
                     } else if(roleBottom > pointA[1]){
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointA[1]];
+                        return [pos[0], pointA[1], 0];
                     }
                 } else if(pointA[1] < pointB[1]){
-
-                    if(velocity > 0){
-                        if(roleBottom >= pointA[1]){
-                            return  [pos[0], pointB[1]];
+                    if(roleBottom === pointA[1]){ // 与底边重合
+                        // 此处要有初始跳跃点比较
+                        if(velocity[0] > 0){
+                            return  [pos[0], pointA[1], 1];
+                        } else if(velocity[0] < 0){
+                            return  [pos[0], pointA[1], -1];
+                        } else {
+                            return  [pos[0], pointA[1], 0];
                         }
-                    } else if(velocity < 0){
-                        return  [pos[0], pointA[1]];
-                    } else {
-                        return  [pos[0], pointA[1]];
+                    } else if(roleBottom === pointB[1]){ // 与台阶左侧点重合
+                        // 此处要有初始跳跃点比较
+                        if(velocity[0] > 0){
+                            return [pos[0], pointB[1], 1];
+                        } else if(velocity[0] < 0){
+                            return [pos[0], pointA[1], 0];
+                        } else {
+                            return [pos[0], pointA[1], 0];
+                        }
+                    } else if(roleBottom > pointB[1]){
+                        // 此处要有初始跳跃点比较
+                        if(velocity[0] > 0){
+                            return [pos[0], pointB[1], 1];
+                        } else if(velocity[0] < 0){
+                            return [pos[0], pointA[1], -1];
+                        } else {
+                            return [pos[0], pointA[1], 0];
+                        }
+                    } else if(roleBottom > pointA[1] && roleBottom < pointB[1]){// 原地跳起 / 撞墙, 此时如果有v则会出错，需要另行判断
+                        if(velocity[0] > 0){
+                            return [pos[0], pointB[1], 0];
+                        } else if(velocity[0] < 0){
+                            return [pos[0], pointA[1], 0];
+                        } else {
+                            return [pos[0], pointA[1], 0];
+                        }
                     }
-
-                    // if(roleBottom === pointA[1]){ // 与底边重合
-                    //     return velocity > 0 ? [pos[0], pointB[1]] : [pos[0], pointA[1]];
-                    // } else if(roleBottom === pointB[1]){ // 与台阶左侧点重合
-                    //     // 此处要有初始跳跃点比较
-                    //     return [pos[0], pointB[1]];
-                    // } else if(roleBottom > pointB[1]){
-                    //     // 此处要有初始跳跃点比较
-                    //     return [pos[0], pointB[1]];
-                    // } else if(roleBottom > pointA[1] && roleBottom < pointB[1]){// 原地跳起 / 撞墙, 此时如果有v则会出错，需要另行判断
-                    //     return [pos[0], pointB[1]];
-                    // }
                 } else { // pointA[1] === pointB[1] 在凹陷的平台上
-                    return [pos[0], pointA[1]];
+                    return [pos[0], pointA[1], 0];
                 }
-            }
-            if(pos[0] === pointA[0]){  // role左侧点与map点重合，map点呈现高度下降趋势，跳上右侧台/从高台右上角跳下  动作
+            } else if(pos[0] === pointA[0]){  // role左侧点与map点重合，map点呈现高度下降趋势，跳上右侧台/从高台右上角跳下  动作
                 if(pointA[1] < pointB[1]){
                     if(roleBottom === pointB[1]){ // 与顶边重合
                         return [pos[0], pointB[1]];
@@ -409,27 +428,48 @@ export default class Role{
                         return [pos[0], pointB[1]];
                     }
                 } else if(pointA[1] > pointB[1]){
-                    if(roleBottom === pointA[1]){ // 与底边重合
-                        return velocity > 0 ? [pos[0], pointB[1]] : [pos[0], pointA[1]];
+                    if(roleBottom === pointB[1]){ // 与底边重合
+                        if(velocity[0] > 0){
+                            return [pos[0], pointB[1], 0];
+                        } else if(velocity[0] < 0){
+                            return [pos[0], pointA[1], 1];
+                        } else {
+                            return [pos[0], pointB[1], 0];
+                        }
                     } else if(roleBottom === pointA[1]){ // 与台阶左侧点重合
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointA[1]];
-                    } else if(roleBottom > pointA[1]){
+                        if(velocity[0] > 0){ // 抛下
+                            return [pos[0], pointB[1], -1];
+                        } else if(velocity[0] < 0){ // 跳上
+                            return [pos[0], pointA[1], 1];
+                        } else {
+                            return [pos[0], pointB[1], 0];
+                        }
+                        // return [pos[0], pointA[1]];
+                    } else if(roleBottom > pointA[1]){ // 跳上
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointA[1]];
+                        if(velocity[0] > 0){ // 抛下
+                            return [pos[0], pointB[1], -1];
+                        } else if(velocity[0] < 0){ // 跳上
+                            return [pos[0], pointA[1], 1];
+                        } else {
+                            return [pos[0], pointB[1], 0];
+                        }
                     } else if(roleBottom > pointB[1] && roleBottom < pointA[1]){// 原地跳起 / 撞墙, 此时如果有v则会出错，需要另行判断
-                        return [pos[0], pointA[1]];
+                        if(velocity[0] > 0){ // 抛下
+                            return [pos[0], pointB[1], -1];
+                        } else if(velocity[0] < 0){ // 跳上
+                            return [pos[0], pointA[1], 1];
+                        } else {
+                            return [pos[0], pointB[1], 0];
+                        }
                     }
                 } else { // pointA[1] === pointB[1] 在凹陷的平台上
-                    return [pos[0], pointA[1]];
+                    return [pos[0], pointA[1], 0];
                 }
             }
 
-            if(pos[0] > pointA[0] && pos[0] + width < pointB[0]){ // role整体在平台上
-                return  [pos[0], pointA[1]];
-            } else if(pos[0] < pointA[0] && pos[0] + width > pointA[0] && pointA[0] === pointB[0]){ // map上必有上与下两个x相同的点在中间
-                return  pointA[1] > pointB[1] ? [pos[0], pointA[1]] : [pos[0], pointB[1]];
-            }
+
         }
         return point
     };
