@@ -95,8 +95,8 @@ export default class Role{
             } else if(level < positionBottomY){ // 平抛，run的跳跃需要关闭
                 if(velocity[0]){ // 无法屏蔽移动超过平台边界时的跳跃，
                     newRole.preFm = 25; // 这条语句会开启跳跃动作
-                    newRole.tempHorizon = level;
-                    newRole.preFm = newRole.preFm + 1; // 这条语句会开启跳跃动作
+                    newRole.tempHorizon = positionBottomY;
+                    console.log(positionBottomY, 456);
                 }
             }
         } else { // level === positionBottomY 时role水平方向运动
@@ -155,7 +155,7 @@ export default class Role{
                         }
                     } else if(roleBottom === pointB[1]){ // 与台阶左侧点重合
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointA[1], 0];
+                        return [pos[0], pointA[1], -1];
                     } else if(roleBottom > pointB[1]){
                         // 此处要有初始跳跃点比较
                         return [pos[0], pointB[1], 0];
@@ -186,7 +186,7 @@ export default class Role{
                         }
                     } else if(roleBottom === pointA[1]){ // 与台阶左侧点重合
                         // 此处要有初始跳跃点比较
-                        return [pos[0], pointA[1], 0];
+                        return [pos[0], pointA[1], -1];
                     } else if(roleBottom > pointA[1]){
                         // 此处要有初始跳跃点比较
                         return [pos[0], pointA[1], 0];
@@ -240,7 +240,6 @@ export default class Role{
         // 当前x坐标与map的x坐标对比
         // 未作部分：如果大于mapMoveLimitRage(screenWidth/2)则v为0，此时转化为纵向jump，然后x向map继续移动，目前状态jump时map不动
         if(balance){ // 该结果在结束时可能不会出现，需要近似运算
-            // 平路跳跃,需要区分开始和结束
             if(point[2] > 0){ // [number, number, number(0平台/1凸起/-1凹陷)]
                 V[0] = 0;
             }
@@ -261,6 +260,7 @@ export default class Role{
 
                 newRole.button.space = keyStatus.off;// 关闭跳跃loading状态
                 newRole.tempHorizon = mappingPointY; // 动画开始 动画结束，重新记录位置
+
             }
         } else if(rolePositionBottomY > mappingPointY){ // 跳起，未着地，未撞墙，由于墙由上下两个点绘制，level为role左侧，垂直映射到map上的点
 
@@ -281,7 +281,7 @@ export default class Role{
             }
 
         //    跳起平台转换，结束--------------------
-
+console.log('mappingPointY', mappingPointY, 'tempHorizon', tempHorizon);
 
         } else if(rolePositionBottomY < mappingPointY){// 撞墙，由于墙由上下两个点绘制，level为role左侧，垂直映射到map上的点
             V[0] = 0;
