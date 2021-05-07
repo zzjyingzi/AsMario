@@ -80,7 +80,6 @@ export default class Role implements roleInterface{
                 if(velocity[0]){ // 无法屏蔽移动超过平台边界时的跳跃，
                     newRole.preFm = 25; // 这条语句会开启跳跃动作
                     newRole.tempHorizon = positionBottomY;
-                    console.log(positionBottomY, 456);
                 }
             }
         } else { // level === positionBottomY 时role水平方向运动
@@ -89,9 +88,10 @@ export default class Role implements roleInterface{
             } else if(newX + newRole.mapPosition[0] - newRole.screenWidth/2 >= newRole.map[newRole.map.length - 1][0] - width && velocity[0] >= 0){
                 // 右侧撞墙
                 newX = newRole.screenWidth - width;
-            } else if ( pos[0] >= mapMoveLimitRage &&  (newX + newRole.mapPosition[0] - newRole.screenWidth/2 <= lastMiddle)){
+            } else if ( newX >= mapMoveLimitRage &&  (newX + newRole.mapPosition[0] - newRole.screenWidth/2 <= lastMiddle)){
                 // role相对于map的当前坐标：如果小于半屏则为newX，大于则为newRole.mapPosition[0]
                 newX = mapMoveLimitRage;
+                newRole.mapVelocity = velocity[0];
                 newRole.velocity[0] = 0;
             }
         }

@@ -130,35 +130,29 @@ class app{
         app.mapVelocity = right ? stV :(left ? -stV : 0);
 
 
-        newRole.mapVelocity = mapVelocity; // 传递参数到role
+        // newRole.mapVelocity = mapVelocity; // 传递参数到role
         // x 方移动Y轴，map渲染位置改变,
         // 已有正向，反向？？？   |---|-------------|---|
         // 左端---前端半屏界限----中间段----后端半屏---右端
+
+        const mapMiddleX = mapPosition[0];
+        //
+        // if(mapMiddleX > positionX && (mapMiddleX > width/2 && mapMiddleX < lastMiddle)){ // 前半区间内
+        //
+        // }
+
         if(positionX < width/2){ // 前端区间
-            console.log('前段 index' , positionX, width/2);
             app.mapVelocity = 0;
-            if(mapPosition[0] > width/2){ //在后半段递减
-                app.mapPosition[0] = mapPosition[0] + mapVelocity;
-            } else{
-                app.mapPosition[0] = width/2;
-            }
+            app.mapPosition[0] = width/2;
         } else if(positionX === width/2){ // 注意,如果不等无法启动地图移动动画,隐含条件是只有role中的newX在中间段停止后,此处动画才会启动
-
-            // console.log(newRole.preFm, 'qwe');
-            if(preFm){ // 跳跃运行中，此处以后可能会有问题，重复space键时无法停止进程，垂直跳跃没有清理最后的速度
-                app.mapVelocity = right ? stV :(left ? -stV : 0);
-            }
-
-            app.mapPosition[0] = mapPosition[0] + mapVelocity;
+            app.mapPosition[0] = mapPosition[0] + app.mapVelocity;
         } else if(mapPosition[0] > width/2 && mapPosition[0] < lastMiddle){ // 中间段
-            console.log('中间段 index');
+            newRole.velocity[0] = 0;
             app.mapPosition[0] = mapPosition[0] + mapVelocity;  // map最大尺寸
         } else if(mapPosition[0] === lastMiddle){ // 此处突然加速???原因:map和role叠加速度，叠加速度是因为区间判断不准确
             app.mapPosition[0] = lastMiddle;
             newRole.velocity[0] = mapVelocity;
         } else if(positionX > lastMiddle){  // 尾部区间
-
-            console.log('后段 index');
             app.mapVelocity = 0;
             app.mapPosition[0] = lastMiddle + mapVelocity;
         }
