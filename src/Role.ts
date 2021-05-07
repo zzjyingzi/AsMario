@@ -1,41 +1,25 @@
 import {slowDown, frameCounter} from './util_speedY'
 import {keyStatus} from './enumStatus';
 import {approximatelyEqual, compareNearPoint} from './util_math'
-
-interface initialData{
-    x:number;
-    y:number;
-    horizon:number;
-    map:Array<Array<number>>,
-    v: number,
-    roleWidth: number;
-    roleHeight: number;
-    tempHorizon: number;
-}
-
-// 组合键开关接口
-interface button{
-    space: keyStatus;
-    left: keyStatus;
-    right: keyStatus;
-}
+import {roleInterface, roleInitialData, button, mapData} from './interface';
 
 
 
-export default class Role{
-    ctx:any;
-    lives: 100;
+export default class Role implements roleInterface{
     positionX: number;
     positionY: number;
     width: number;
     height: number;
     preFm: number;
     velocity: [number, number]; // 每帧水平变量，右为正，左为负
+
+    ctx:any;
+    lives: 100;
     stV: number;
     horizon: number;
     tempHorizon: number; // 临时水平线、起跳点、平抛点、下落点
     button: button;
-    map: Array<any>;
+    map: mapData;
     screenWidth: number;
     screenHeight: number;
     mapPosition: [number, number]; // role在地图中的位置，向前x向需+width，向下y向需+height
@@ -279,9 +263,8 @@ export default class Role{
             } else {// 起跳空中状态
                 newY = mappingPointY + (increment < 0 ? 0 :increment); // 落点必定大于等于投影点
             }
-
         //    跳起平台转换，结束--------------------
-console.log('mappingPointY', mappingPointY, 'tempHorizon', tempHorizon);
+
 
         } else if(rolePositionBottomY < mappingPointY){// 撞墙，由于墙由上下两个点绘制，level为role左侧，垂直映射到map上的点
             V[0] = 0;
@@ -506,32 +489,32 @@ console.log('mappingPointY', mappingPointY, 'tempHorizon', tempHorizon);
 
     frame(){ // 暂时没用
         const newRole = this;
-        const ctx = this.ctx;
         setTimeout(()=>{
-            newRole.clearRect(ctx);
+            newRole.clearRect();
         },1000/60)
     };
+
     draw(){
         const {positionX, positionY, width, height, ctx, horizon} = this;
         ctx.fillStyle = "rgb(229,99,9)";
         // 需要根据horizon基本坐标系偏移处理当前的positionX, positionY
         ctx.fillRect(positionX, horizon - positionY - height, width, height);
     };
-    clearRect(ctx:any){
-        const { positionX, positionY, width, height, horizon} = this;
+    clearRect(){
+        const { positionX, positionY, width, height, horizon, ctx} = this;
         // 需要根据horizon基本坐标系偏移处理当前的positionX, positionY
         ctx.clearRect(positionX, horizon - positionY - height, width, height);
     };
 
-    create(ctx: any,initialData:initialData){
+    create(ctx: any,initialData:roleInitialData){
         // 初始数据及状态
-        const {x, y, horizon, map, roleWidth, roleHeight, v, tempHorizon} = initialData;
+        const {positionX, positionY, horizon, map, width, height, velocity, tempHorizon} = initialData;
         this.ctx = ctx;
-        this.setStatus(roleWidth, roleHeight); // 初始大小
-        this.setPos(x, y); // 起始点
+        this.setStatus(width, height); // 初始大小
+        this.setPos(positionX, positionY); // 起始点
 
         this.preFm = 0;// 起始帧
-        this.stV = v;// 标准速度
+        this.stV = velocity[0];// 标准速度
 
         this.tempHorizon = tempHorizon;// 从静止开始
         this.horizon = horizon;// 从静止开始
@@ -539,7 +522,6 @@ console.log('mappingPointY', mappingPointY, 'tempHorizon', tempHorizon);
 
          // 基础绘制,可省略，因为整体刷新
          // this.draw();
-
         // 动作
         // this.frame();
     }

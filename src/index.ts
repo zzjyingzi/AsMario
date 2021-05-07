@@ -1,15 +1,17 @@
 import Role from './Role';
+import Map from "./Map";
 import { bindEvent } from './util_event'
 import { jumpLine } from './util_math'
 import draPath from "./draPath";
 import { keyStatus } from './enumStatus';
 import { build, Building } from "./building";
+import { mapData } from './interface'
 
 
 
 class app{
     protected static gameName = 'superMario';
-    protected static version = '1.0';
+    protected static version = '0.93';
 
     newRole: any;
     ctx:any;
@@ -19,8 +21,8 @@ class app{
     velocity: [number, number]; // 每帧水平变量，右为正，左为负
     // 建筑应当有 可破坏/不可破坏 属性。当role头部碰到可破坏时，当role脚步碰到怪物时。
 
-    map: Array<Array<number>>;   // [[x, -1]]，x=-1时为极右端，y=-1代表最底端。
-    screenMap: Array<Array<number>>;   // [[x, -1]]，x=-1时为极右端，y=-1代表最底端。
+    map: mapData;   // [[x, -1]]，x=-1时为极右端，y=-1代表最底端。
+    screenMap: mapData;   // [[x, -1]]，x=-1时为极右端，y=-1代表最底端。
     mapPosition: [number, number];
     mapVelocity: number;
 
@@ -75,11 +77,6 @@ class app{
 
 
 
-//---------------------------------- 控制map渲染模块
-        app.moveMap(newRole, app);
-// 绘制map
-        draPath(app.ctx, this.screenMap, null, app.horizon, app.height);
-//---------------------------------
 
 
         // 控制状态判断
@@ -111,6 +108,13 @@ class app{
             }
         }
 
+        //---------------------------------- 控制map渲染模块
+        app.moveMap(newRole, app);
+// 绘制map ，后绘制map有可能导致role被map擦除无法看到
+        draPath(app.ctx, app.screenMap, null, app.horizon, app.height);
+//---------------------------------
+
+
         // 递归
         window.requestAnimationFrame(app.frame.bind(this));
     };
@@ -131,6 +135,7 @@ class app{
         // 已有正向，反向？？？   |---|-------------|---|
         // 左端---前端半屏界限----中间段----后端半屏---右端
         if(positionX < width/2){ // 前端区间
+            console.log('前段 index' , positionX, width/2);
             app.mapVelocity = 0;
             if(mapPosition[0] > width/2){ //在后半段递减
                 app.mapPosition[0] = mapPosition[0] + mapVelocity;
@@ -146,11 +151,14 @@ class app{
 
             app.mapPosition[0] = mapPosition[0] + mapVelocity;
         } else if(mapPosition[0] > width/2 && mapPosition[0] < lastMiddle){ // 中间段
+            console.log('中间段 index');
             app.mapPosition[0] = mapPosition[0] + mapVelocity;  // map最大尺寸
         } else if(mapPosition[0] === lastMiddle){ // 此处突然加速???原因:map和role叠加速度，叠加速度是因为区间判断不准确
             app.mapPosition[0] = lastMiddle;
             newRole.velocity[0] = mapVelocity;
         } else if(positionX > lastMiddle){  // 尾部区间
+
+            console.log('后段 index');
             app.mapVelocity = 0;
             app.mapPosition[0] = lastMiddle + mapVelocity;
         }
@@ -201,10 +209,12 @@ class app{
 
     run = ()=>{
         const app = this;
-        const { map, horizon, ctx } = app;
+        const { map, horizon, ctx, mapPosition, width, height } = app;
 
 
         //绘制场景
+
+
 
 
 
@@ -219,19 +229,29 @@ class app{
         // 绘制角色
         const newRole = new Role();
         newRole.create(ctx,{
-            x: 0,
-            y: 0,
+            positionX: 0,
+            positionY: 0,
             horizon: horizon,
             map: map,
-            v: 5,
-            roleWidth: 40,
-            roleHeight: 50,
+            velocity: [5, 0],
+            width: 40,
+            height: 50,
             tempHorizon: 0
         }); // 起始点
         app.newRole = newRole;
         newRole.screenWidth = app.width;
         newRole.screenHeight = app.height;
         newRole.mapPosition = [...app.mapPosition];
+
+
+
+        // 地图
+        const mapDraw = new Map({
+            data : map,
+            rolePosition : mapPosition,
+            screen : [width, height]
+        });
+
 
 
         // 关联事件，将当前对象，ctx和建筑、角色传入到控制部分
