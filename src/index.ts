@@ -145,7 +145,17 @@ class app{
             app.mapVelocity = 0;
             app.mapPosition[0] = width/2;
         } else if(positionX === width/2){ // 注意,如果不等无法启动地图移动动画,隐含条件是只有role中的newX在中间段停止后,此处动画才会启动
-            app.mapPosition[0] = mapPosition[0] + app.mapVelocity;
+            console.log(mapVelocity, positionX, width/2, mapPosition[0], 'mapVelocity, positionX, width/2, mapPosition[0]');
+            console.log(right);
+            if(mapVelocity[0] >= 0){ // 临界状态，v方向为正则移动map为负则移动role
+                app.mapVelocity = right ? stV :(left ? -stV : 0);
+                console.log(212112, mapVelocity);
+
+                app.mapPosition[0] = mapPosition[0] + app.mapVelocity;
+            } else {
+                newRole.velocity[0] = app.mapVelocity;
+                app.mapPosition[0] = width/2;
+            }
         } else if(mapPosition[0] > width/2 && mapPosition[0] < lastMiddle){ // 中间段
             newRole.velocity[0] = 0;
             app.mapPosition[0] = mapPosition[0] + mapVelocity;  // map最大尺寸
@@ -274,7 +284,6 @@ const newGame =  new app();
 // newGame.map = [[0, 0],[300, 0], [350, 0],[350, 0],[400, 0],[400, 0],[1200, 0],[1200, 0],[1250, 0],[1250, 0], [1600, 0],[1750, 0], [1750, 0],[1800, 0], [1800, 0]];
  newGame.map = [[0, 0],
      [400, 0],[400, 80],[600, 80],[600, 0],
-     [1200, 0],[1200, 120],[1250, 120],[1250, 0],
      [1750, 0], [1750, 50],[1800, 50], [1800, 0],
      [2500, 0], [2500, 100], [2550, 100], [2550, 0],
      [3000, 0], [3000, 50], [3050, 50], [3050, 0] ,
