@@ -252,7 +252,7 @@ class app{
         // 地图
         const mapDraw = new Map({
             data : map,
-            rolePosition : mapPosition,
+            position : mapPosition,
             screen : [width, height]
         });
 
