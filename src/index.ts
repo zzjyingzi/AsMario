@@ -14,6 +14,7 @@ class app{
     protected static version = '0.93';
 
     newRole: any;
+    mapDraw: any;
     ctx:any;
     width:number;
     height:number;
@@ -21,7 +22,7 @@ class app{
     velocity: [number, number]; // 每帧水平变量，右为正，左为负
     // 建筑应当有 可破坏/不可破坏 属性。当role头部碰到可破坏时，当role脚步碰到怪物时。
 
-    map: mapData;   // [[x, -1]]，x=-1时为极右端，y=-1代表最底端。
+    mapData: mapData;   // [[x, -1]]，x=-1时为极右端，y=-1代表最底端。
     screenMap: mapData;   // [[x, -1]]，x=-1时为极右端，y=-1代表最底端。
     mapPosition: [number, number];
     mapVelocity: number;
@@ -121,12 +122,12 @@ class app{
     // 移动map函数独立出来
     moveMap(newRole:any, app:any){
         const { button, stV, positionX, preFm } = newRole;
-        const { mapVelocity, map, width, mapPosition } = app;
+        const { mapVelocity, mapData, width, mapPosition } = app;
         const { space, right, left } = button;
         // 当前运行速度,注意跳跃进度会影响
-        const lastMiddle = map[map.length - 1][0] - width/2;
+        const lastMiddle = mapData[mapData.length - 1][0] - width/2;
 
-        // 按键规则对map速度的影响
+        // 按键规则对mapData速度的影响
         app.mapVelocity = right ? stV :(left ? -stV : 0);
 
 
@@ -169,12 +170,12 @@ class app{
         newRole.mapPosition[0] = mapPosition[0]; // 存储变革数据到role中
     };
 
-    // map在屏幕的渲染范围
+    // mapData在屏幕的渲染范围
     getMapRange(){
-        const { map, mapPosition, width, height } = this;
+        const { mapData, mapPosition, width, height } = this;
         // mapPosition为地图渲染中心点
 
-        let range = map.filter((item)=>{
+        let range = mapData.filter((item)=>{
            return (item[0] >= (mapPosition[0] - width/2)) && (item[0] <= mapPosition[0] + width/2);
         });
         // 要考虑没有点
@@ -213,7 +214,7 @@ class app{
 
     run = ()=>{
         const app = this;
-        const { map, horizon, ctx, mapPosition, width, height } = app;
+        const { mapData, horizon, ctx, mapPosition, width, height } = app;
 
 
         //绘制场景
@@ -236,7 +237,7 @@ class app{
             positionX: 0,
             positionY: 0,
             horizon: horizon,
-            map: map,
+            mapData: mapData,
             velocity: [5, 0],
             width: 40,
             height: 50,
@@ -245,16 +246,18 @@ class app{
         app.newRole = newRole;
         newRole.screenWidth = app.width;
         newRole.screenHeight = app.height;
-        newRole.mapPosition = [...app.mapPosition];
+        newRole.mapPosition = [...mapPosition];
 
 
 
         // 地图
-        const mapDraw = new Map({
-            data : map,
-            position : mapPosition,
-            screen : [width, height]
+        app.mapDraw = new Map({
+            data : mapData,
+            position : [...mapPosition],
+            screen : [width, height],
+            velocity: [5, 0]
         });
+
 
 
 
@@ -282,7 +285,7 @@ class app{
 
 const newGame =  new app();
 // newGame.map = [[0, 0],[300, 0], [350, 0],[350, 0],[400, 0],[400, 0],[1200, 0],[1200, 0],[1250, 0],[1250, 0], [1600, 0],[1750, 0], [1750, 0],[1800, 0], [1800, 0]];
- newGame.map = [[0, 0],
+ newGame.mapData = [[0, 0],
      [400, 0],[400, 80],[600, 80],[600, 0],
      [1750, 0], [1750, 50],[1800, 50], [1800, 0],
      [2500, 0], [2500, 100], [2550, 100], [2550, 0],

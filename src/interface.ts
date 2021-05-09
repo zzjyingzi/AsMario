@@ -23,7 +23,7 @@ export interface roleInterface {
 
 // 角色初始化数据
 export interface roleInitialData extends roleInterface{
-    map: mapData;
+    mapData: mapData;
     horizon:number;
     tempHorizon: number;
 }
